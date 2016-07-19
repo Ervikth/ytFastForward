@@ -1,15 +1,22 @@
 var speed  = 1.0;
 
+chrome.tabs.executeScript(null, {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate =1.0;"});
+
+chrome.browserAction.setBadgeText({text: speed.toString()});
+
 function click(e) {
   if(e.target.id == "<<"){
-    speed-=0.5;
+    speed-=0.25;
+    chrome.browserAction.setBadgeText({text: speed.toString()});
+
     chrome.tabs.executeScript(null,
-        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ (Math.round(speed * 100) / 100) + ";"});
+        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ speed.toFixed(2) + ";"});
   }
   if(e.target.id == ">>"){
-    speed+=0.5;
+    speed+=0.25;
+    chrome.browserAction.setBadgeText({text: speed.toString()});
     chrome.tabs.executeScript(null,
-        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ (Math.round(speed * 100) / 100) + ";"});
+        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ speed.toFixed(2) + ";"});
   }
 }
 document.addEventListener('DOMContentLoaded', function () {
