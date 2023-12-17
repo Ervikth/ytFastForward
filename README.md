@@ -1,4 +1,4 @@
 # ytFastForward
-Chrome Extension which enables you to fast forward beyond 2x on youtube.
+Chrome fast forward extension allowing you to accelerate playback speed beyond the standard 2x limit.
 
 https://chromewebstore.google.com/detail/onphnbdaloaeamdhncmepiklcplinpke
