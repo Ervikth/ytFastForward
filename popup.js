@@ -1,49 +1,67 @@
-//global Variable
-var speed  = 1.0;
-/*
-After extension icon is clicked it will run those two lines of code.
-1. run script to set speed to initial value of 1.
-2. set the icon text to match the current speed.
-*/
-chrome.tabs.executeScript(null, {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate =1.0;"});
-chrome.browserAction.setBadgeText({text: speed.toString()});
-
-
-/**
-When extension icon is clicked set listners on all the div elements inside popup.html
-
-addEventListner('click', click);
-Explanation of: ('click', click);
-'click' --> is the type of listener, meaning it listens to a click by the user.
-, click); --> this is the second parameter and this is the function it is supposed to run
-after listener detects a click on the element.
-more: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
-*/
-document.addEventListener('DOMContentLoaded', function () {
-  var divs = document.querySelectorAll('div');
-  for (var i = 0; i < divs.length; i++) {
-    divs[i].addEventListener('click', click);
-  }
+document.addEventListener("DOMContentLoaded", function() {
+  initializePopup();
+  setupHoverListeners();
 });
 
-/**
-addEventListener('click', --> click  <--); this is the click function.
+function initializePopup() {
+  setInitialSpeed();
+  setupButtonListeners();
+}
 
-This function takes the whole div element as argument.
-The ifs checks if the div id is "<<" or ">>" and runs the specified code.
-*/
-function click(e) {
-  if(e.target.id == "<<"){
-    speed-=0.25;
-    chrome.browserAction.setBadgeText({text: speed.toString()});
+function setInitialSpeed() {
+  chrome.storage.local.get("speed", (data) => {
+    const currentSpeed = data.speed || 1.0;
+    TABS_applySpeedToActiveTab(currentSpeed);
+  });
+}
 
-    chrome.tabs.executeScript(null,
-        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ speed.toFixed(2) + ";"});
-  }
-  if(e.target.id == ">>"){
-    speed+=0.25;
-    chrome.browserAction.setBadgeText({text: speed.toString()});
-    chrome.tabs.executeScript(null,
-        {code:"document.getElementsByClassName(\"video-stream html5-main-video\")[0].playbackRate ="+ speed.toFixed(2) + ";"});
-  }
+function setupButtonListeners() {
+  document.getElementById("increase").addEventListener("click", () => adjustSpeed(0.25));
+  document.getElementById("decrease").addEventListener("click", () => adjustSpeed(-0.25));
+}
+
+function setupHoverListeners() {
+  ['increase', 'decrease'].forEach(id => {
+    const button = document.getElementById(id);
+    button.addEventListener('mouseover', handleHover);
+    button.addEventListener('mouseout', stopHover);
+  });
+}
+
+function handleHover(e) {
+  const targetId = e.target.id;
+  const scrollHandlerWithId = event => scrollHandler(event, targetId);
+  window.addEventListener('wheel', scrollHandlerWithId);
+  e.target.scrollHandler = scrollHandlerWithId;
+}
+
+function stopHover(e) {
+  window.removeEventListener('wheel', e.target.scrollHandler);
+}
+
+function scrollHandler(event, targetId) {
+  let delta = (event.deltaY < 0) ? 0.25 : -0.25; // Scrolling up increases, down decreases
+  adjustSpeed(delta);
+}
+
+function adjustSpeed(delta) {
+  chrome.storage.local.get("speed", (data) => {
+    const currentSpeed = data.speed || 1.0;
+    const newSpeed = Math.max(currentSpeed + delta, 0.25);
+    RUNTIME_updateSpeed(newSpeed);
+  });
+}
+
+function RUNTIME_updateSpeed(newSpeed) {
+  chrome.storage.local.set({ speed: newSpeed }, () => {
+    chrome.runtime.sendMessage({ action: "updateSpeed", speed: newSpeed });
+  });
+}
+
+function TABS_applySpeedToActiveTab(speed) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "changePlaybackRate", newSpeed: speed });
+    }
+  });
 }
