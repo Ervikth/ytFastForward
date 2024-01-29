@@ -3,7 +3,7 @@
   "name": "Fast Forward Speed Control",
   "version": "1.60",
   "description": "Control the playback speed of videos beyond standard limits.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
